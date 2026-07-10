@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastosYa — Gestor de Gastos Personales</title>
+    <meta name="description" content="Una aplicación web interactiva para registrar, listar y controlar tus gastos de forma sencilla e inteligente con una arquitectura premium.">
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 31, 48, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --danger-glow: rgba(239, 68, 68, 0.3);
+            
+            /* Category Colors */
+            --cat-alimentacion: #f59e0b;
+            --cat-transporte: #3b82f6;
+            --cat-salud: #10b981;
+            --cat-entretenimiento: #ec4899;
+            --cat-otro: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Header Style */
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        /* Top Summary Dashboard Widget */
+        .summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), #ec4899);
+        }
+
+        .summary-info h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+
+        .summary-value span.symbol {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .summary-icon {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-radius: 20px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-size: 1.8rem;
+        }
+
+        /* Grid Layout for Form and Table */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        @media (min-width: 850px) {
+            .main-grid {
+                grid-template-columns: 400px 1fr;
+            }
+        }
+
+        /* Common Card Style */
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.05);
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .panel-title i {
+            color: var(--primary);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            background: rgba(11, 15, 25, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+            background: rgba(11, 15, 25, 0.95);
+        }
+
+        .form-control:focus + i {
+            color: var(--primary);
+        }
+
+        select.form-control {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* Button Style */
+        .btn {
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Expenses Table Styling */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            background: rgba(11, 15, 25, 0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(22, 31, 48, 0.9);
+            padding: 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            font-size: 1rem;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges for Categories */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            border: 1px solid transparent;
+        }
+
+        .badge-alimentacion {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--cat-alimentacion);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-transporte {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--cat-transporte);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-salud {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--cat-salud);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-entretenimiento {
+            background: rgba(236, 72, 153, 0.1);
+            color: var(--cat-entretenimiento);
+            border-color: rgba(236, 72, 153, 0.2);
+        }
+
+        .badge-otro {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--cat-otro);
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        .gasto-monto {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Action Buttons */
+        .btn-delete {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-delete:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 10px var(--danger-glow);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.1);
+            stroke-width: 1.5;
+        }
+
+        /* Notification Toast System */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-left: 4px solid var(--primary);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 280px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success {
+            border-left-color: var(--cat-salud);
+        }
+
+        .toast-error {
+            border-left-color: var(--danger);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 300;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <header>
+            <h1><i data-lucide="wallet"></i> GastosYa</h1>
+            <p>Gestor inteligente de gastos personales para organizar tus finanzas</p>
+        </header>
+
+        <!-- Total Card Widget -->
+        <section class="summary-card">
+            <div class="summary-info">
+                <h2>Total Acumulado</h2>
+                <div class="summary-value" id="total-display">
+                    <span class="symbol">$</span>0.00
+                </div>
+            </div>
+            <div class="summary-icon">
+                <i data-lucide="trending-up"></i>
+            </div>
+        </section>
+
+        <!-- Main Workspace -->
+        <main class="main-grid">
+            
+            <!-- Left Side: Add Expense Form -->
+            <section class="panel">
+                <h3 class="panel-title">
+                    <i data-lucide="plus-circle"></i>
+                    Registrar Gasto
+                </h3>
+                
+                <form id="gasto-form" novalidate>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="descripcion" 
+                                class="form-control" 
+                                placeholder="Ej. Almuerzo corporativo" 
+                                required
+                            >
+                            <i data-lucide="file-text"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="monto">Monto ($)</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="number" 
+                                id="monto" 
+                                class="form-control" 
+                                placeholder="Ej. 15.50" 
+                                min="0.01" 
+                                step="0.01" 
+                                required
+                            >
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoria">Categoría</label>
+                        <div class="input-wrapper select-wrapper">
+                            <select id="categoria" class="form-control" required>
+                                <option value="" disabled selected>Selecciona una categoría</option>
+                                <option value="alimentacion">Alimentación</option>
+                                <option value="transporte">Transporte</option>
+                                <option value="salud">Salud</option>
+                                <option value="entretenimiento">Entretenimiento</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                            <i data-lucide="tag"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btn-submit">
+                        <i data-lucide="plus"></i>
+                        Guardar Gasto
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Side: Expenses List -->
+            <section class="panel">
+                <h3 class="panel-title">
+                    <i data-lucide="list"></i>
+                    Historial de Gastos
+                </h3>
+
+                <div class="table-container">
+                    <table id="gastos-table">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Categoría</th>
+                                <th>Monto</th>
+                                <th style="width: 60px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gastos-list">
+                            <!-- JS will inject rows here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i data-lucide="piggy-bank"></i>
+                    <p>No tienes gastos registrados. ¡Registra uno nuevo para empezar!</p>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Notification Toast Element -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer>
+        <p>&copy; 2026 GastosYa. Desarrollado con 💜 y FastAPI.</p>
+    </footer>
+
+    <script>
+        // API Base URL Detection (handles absolute or relative local development)
+        const API_BASE = window.location.origin.includes('localhost') ? '' : 'http://localhost:8000';
+        const API_URL = `${API_BASE}/gastos`;
+
+        // Cache DOM elements
+        const form = document.getElementById('gasto-form');
+        const listContainer = document.getElementById('gastos-list');
+        const emptyState = document.getElementById('empty-state');
+        const totalDisplay = document.getElementById('total-display');
+        const toastContainer = document.getElementById('toast-container');
+
+        // Initial loading of data
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchGastos();
+            fetchTotal();
+            lucide.createIcons();
+        });
+
+        // Show Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let iconName = 'check-circle';
+            if (type === 'error') iconName = 'alert-triangle';
+            if (type === 'info') iconName = 'info';
+
+            toast.innerHTML = `
+                <i data-lucide="${iconName}"></i>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+
+            // Slide in
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Remove after 3.5s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Fetch expenses list
+        async function fetchGastos() {
+            try {
+                const response = await fetch(`${API_URL}/`);
+                if (!response.ok) throw new Error('Error al obtener el listado de gastos.');
+                
+                const gastos = await response.json();
+                renderGastos(gastos);
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Fetch and animate total amount
+        async function fetchTotal() {
+            try {
+                const response = await fetch(`${API_URL}/total`);
+                if (!response.ok) throw new Error('Error al calcular el total.');
+                
+                const data = await response.json();
+                animateTotal(data.total);
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Smooth Counter Animation for Total
+        let currentTotal = 0;
+        function animateTotal(targetValue) {
+            const duration = 800; // ms
+            const start = performance.now();
+            const startVal = currentTotal;
+
+            function update(timestamp) {
+                const elapsed = timestamp - start;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Ease out quad formula
+                const easeProgress = progress * (2 - progress);
+                
+                currentTotal = startVal + (targetValue - startVal) * easeProgress;
+                totalDisplay.innerHTML = `<span class="symbol">$</span>${currentTotal.toFixed(2)}`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    currentTotal = targetValue;
+                    totalDisplay.innerHTML = `<span class="symbol">$</span>${targetValue.toFixed(2)}`;
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        // Render table rows
+        function renderGastos(gastos) {
+            listContainer.innerHTML = '';
+            
+            if (gastos.length === 0) {
+                emptyState.style.display = 'flex';
+                document.querySelector('.table-container').style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            document.querySelector('.table-container').style.display = 'block';
+
+            // Order categories spanish mapping
+            const catMap = {
+                'alimentacion': 'Alimentación',
+                'transporte': 'Transporte',
+                'salud': 'Salud',
+                'entretenimiento': 'Entretenimiento',
+                'otro': 'Otro'
+            };
+
+            gastos.forEach(gasto => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(gasto.descripcion)}</td>
+                    <td><span class="badge badge-${gasto.categoria}">${catMap[gasto.categoria] || gasto.categoria}</span></td>
+                    <td class="gasto-monto">$${gasto.monto.toFixed(2)}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-delete" onclick="deleteGasto('${gasto.id}')" title="Eliminar Gasto">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </td>
+                `;
+                listContainer.appendChild(tr);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // Form Submission (Add Gasto)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const monto = parseFloat(document.getElementById('monto').value);
+            const categoria = document.getElementById('categoria').value;
+
+            // Basic Validation
+            if (!descripcion) {
+                showToast('Por favor, ingresa una descripción.', 'error');
+                return;
+            }
+            if (isNaN(monto) || monto <= 0) {
+                showToast('El monto debe ser un número mayor a cero.', 'error');
+                return;
+            }
+            if (!categoria) {
+                showToast('Por favor, selecciona una categoría.', 'error');
+                return;
+            }
+
+            try {
+                const btnSubmit = document.getElementById('btn-submit');
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<i data-lucide="loader" class="animate-spin"></i> Guardando...`;
+                lucide.createIcons();
+
+                const response = await fetch(`${API_URL}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        descripcion,
+                        monto,
+                        categoria
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    const detailMsg = errData.detail?.[0]?.msg || errData.detail || 'Error en la petición.';
+                    throw new Error(detailMsg);
+                }
+
+                showToast('Gasto agregado exitosamente.');
+                form.reset();
+                
+                // Refresh data
+                await fetchGastos();
+                await fetchTotal();
+
+            } catch (error) {
+                console.error(error);
+                showToast(`Error: ${error.message}`, 'error');
+            } finally {
+                const btnSubmit = document.getElementById('btn-submit');
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `<i data-lucide="plus"></i> Guardar Gasto`;
+                lucide.createIcons();
+            }
+        });
+
+        // Delete Gasto Action
+        async function deleteGasto(id) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este gasto?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('No se pudo eliminar el gasto.');
+
+                showToast('Gasto eliminado.', 'success');
+                
+                // Refresh data
+                await fetchGastos();
+                await fetchTotal();
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Prevent HTML injection helper
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
