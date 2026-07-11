@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastosYa — Panel de Administración</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 31, 48, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 900px) {
+            .wrapper {
+                flex-direction: row;
+            }
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 100%;
+            background: rgba(17, 24, 39, 0.9);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 900px) {
+            .sidebar {
+                width: 280px;
+                border-bottom: none;
+                border-right: 1px solid var(--card-border);
+                position: sticky;
+                top: 0;
+                height: 100vh;
+            }
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-info-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .user-info-card .name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-info-card .badge-admin {
+            align-self: flex-start;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.15rem 0.5rem;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        @media (min-width: 900px) {
+            .nav-menu {
+                flex-direction: column;
+                flex-grow: 1;
+            }
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        @media (max-width: 899px) {
+            .nav-item {
+                width: auto;
+                flex-grow: 1;
+                justify-content: center;
+                font-size: 0.9rem;
+                padding: 0.6rem 0.8rem;
+            }
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-main);
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--danger);
+        }
+
+        .btn-logout {
+            margin-top: auto;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        /* Content Workspace */
+        .content-area {
+            flex-grow: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .panel-title i {
+            color: var(--danger);
+        }
+
+        /* Widgets Grid */
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .widget-card {
+            background: rgba(22, 31, 48, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--danger);
+        }
+
+        .widget-card.info::before { background: var(--info); }
+        .widget-card.success::before { background: var(--success); }
+
+        .widget-info h4 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .widget-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .widget-icon {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(11, 15, 25, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--danger);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Tables & Lists */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            background: rgba(11, 15, 25, 0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(22, 31, 48, 0.9);
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            word-break: break-all;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+        }
+
+        .btn-delete:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            border: 1px solid transparent;
+        }
+
+        .badge-admin { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.2); }
+        .badge-casual { background: rgba(59, 130, 246, 0.1); color: var(--info); border-color: rgba(59, 130, 246, 0.2); }
+
+        .badge-alimentacion { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.2); }
+        .badge-transporte { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: rgba(59, 130, 246, 0.2); }
+        .badge-salud { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+        .badge-entretenimiento { background: rgba(236, 72, 153, 0.1); color: #ec4899; border-color: rgba(236, 72, 153, 0.2); }
+        .badge-educacion { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.2); }
+        .badge-otro { background: rgba(107, 114, 128, 0.1); color: #6b7280; border-color: rgba(107, 114, 128, 0.2); }
+
+        /* Empty State */
+        .empty-state {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1100;
+        }
+
+        .toast {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--danger);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 280px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success { border-left-color: var(--success); }
+        .toast-error { border-left-color: var(--danger); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-brand">
+                <i data-lucide="shield-alert"></i> Admin GastosYa
+            </div>
+
+            <div class="user-info-card">
+                <div class="name" id="admin-name">Administrador</div>
+                <div class="badge-admin">Admin</div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="switchTab('dashboard', this)">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </li>
+                <li class="nav-item" onclick="switchTab('usuarios', this)">
+                    <i data-lucide="users"></i> Usuarios
+                </li>
+                <li class="nav-item" onclick="switchTab('gastos', this)">
+                    <i data-lucide="receipt"></i> Gastos por Usuario
+                </li>
+                <li class="nav-item" onclick="switchTab('historial', this)">
+                    <i data-lucide="history"></i> Papelera Usuarios
+                </li>
+                <li class="nav-item" onclick="switchTab('monitoreo', this)">
+                    <i data-lucide="monitor"></i> Monitoreo de Usuario
+                </li>
+                <li class="nav-item" onclick="switchTab('ayuda', this)">
+                    <i data-lucide="help-circle"></i> Ayuda
+                </li>
+            </ul>
+
+            <button class="btn btn-logout" onclick="logout()">
+                <i data-lucide="log-out"></i> Cerrar Sesión
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+
+            <!-- Tab 1: Dashboard General -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="widgets-grid">
+                    <div class="widget-card info">
+                        <div class="widget-info">
+                            <h4>Usuarios Totales</h4>
+                            <div class="widget-value" id="stats-usuarios">0</div>
+                        </div>
+                        <div class="widget-icon"><i data-lucide="users"></i></div>
+                    </div>
+                    <div class="widget-card">
+                        <div class="widget-info">
+                            <h4>Gastos en el Sistema</h4>
+                            <div class="widget-value" id="stats-gastos">0</div>
+                        </div>
+                        <div class="widget-icon"><i data-lucide="receipt"></i></div>
+                    </div>
+                </div>
+
+                <!-- Active users section -->
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="activity"></i> Resumen de Cuentas Activas</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                    <th>Creado el</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-users-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 2: Usuarios -->
+            <section id="tab-usuarios" class="tab-content">
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="users"></i> Gestión de Cuentas</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                    <th>Password (Bcrypt Hash)</th>
+                                    <th>Fecha Registro</th>
+                                    <th style="width: 150px; text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 3: Gastos por Usuario -->
+            <section id="tab-gastos" class="tab-content">
+                <div class="panel">
+                    <div class="table-header-row">
+                        <h3 class="panel-title" style="border: none; margin: 0; padding: 0;">
+                            <i data-lucide="receipt"></i> Monitoreo de Gastos
+                        </h3>
+                        <div class="filter-group">
+                            <label for="select-usuario-gastos" style="font-size: 0.85rem; color: var(--text-muted);">Seleccionar Usuario:</label>
+                            <select id="select-usuario-gastos" class="form-control" style="width: 240px; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onchange="onUserGastosSelected()">
+                                <!-- Dynamically populated -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="user-gastos-info-block" style="display: none; margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 600;">
+                        Total Gastado por este Usuario: <span id="user-gastos-total" style="color: var(--danger);">$0.00</span>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Fecha Registro</th>
+                                    <th style="width: 60px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-gastos-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="user-gastos-empty" style="display: none;">
+                        <i data-lucide="info"></i>
+                        <p>No se han registrado gastos para este usuario o la lista está vacía.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 4: Historial de Eliminados -->
+            <section id="tab-historial" class="tab-content">
+                <div class="panel">
+                    <div class="table-header-row">
+                        <h3 class="panel-title" style="border: none; margin: 0; padding: 0;">
+                            <i data-lucide="history"></i> Papelera de Gastos de Usuario
+                        </h3>
+                        <div class="filter-group">
+                            <label for="select-usuario-eliminados" style="font-size: 0.85rem; color: var(--text-muted);">Seleccionar Usuario:</label>
+                            <select id="select-usuario-eliminados" class="form-control" style="width: 240px; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onchange="onUserEliminadosSelected()">
+                                <!-- Dynamically populated -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Fecha Eliminación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-eliminados-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="user-eliminados-empty" style="display: none;">
+                        <i data-lucide="trash"></i>
+                        <p>No hay registro de gastos eliminados para este usuario.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 5: Monitoreo de Usuario -->
+            <section id="tab-monitoreo" class="tab-content">
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="monitor"></i> Monitoreo de Usuario</h3>
+                    <div class="form-group" style="max-width: 380px;">
+                        <label for="select-monitoreo-usuario">Seleccionar Usuario Casual</label>
+                        <select id="select-monitoreo-usuario" class="form-control" onchange="cargarMonitoreoUsuario()">
+                            <option value="" disabled selected>Selecciona un usuario...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="monitoreo-content" style="display: none; display: flex; flex-direction: column; gap: 2rem;">
+
+                    <!-- Gastos Activos -->
+                    <div class="panel">
+                        <h3 class="panel-title"><i data-lucide="receipt"></i> Gastos Activos</h3>
+                        <div class="table-container" id="mon-gastos-table-wrapper">
+                            <table>
+                                <thead><tr><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Fecha</th></tr></thead>
+                                <tbody id="mon-gastos-list"></tbody>
+                            </table>
+                        </div>
+                        <div class="empty-state" id="mon-gastos-empty" style="display: none;">
+                            <i data-lucide="piggy-bank"></i><p>No hay gastos activos para este usuario.</p>
+                        </div>
+                    </div>
+
+                    <!-- Categorías -->
+                    <div class="panel">
+                        <h3 class="panel-title"><i data-lucide="pie-chart"></i> Distribución por Categorías</h3>
+                        <div class="category-grid" id="mon-categorias-grid"></div>
+                        <div class="empty-state" id="mon-categorias-empty" style="display: none;">
+                            <i data-lucide="bar-chart-2"></i><p>Este usuario no tiene gastos categorizados.</p>
+                        </div>
+                    </div>
+
+                    <!-- Presupuesto -->
+                    <div class="panel">
+                        <h3 class="panel-title"><i data-lucide="target"></i> Presupuesto Mensual</h3>
+                        <div id="mon-presupuesto-info">
+                            <!-- JS rendered -->
+                        </div>
+                    </div>
+
+                    <!-- Historial Eliminados -->
+                    <div class="panel">
+                        <h3 class="panel-title"><i data-lucide="history"></i> Historial de Eliminados</h3>
+                        <div class="table-container" id="mon-eliminados-table-wrapper">
+                            <table>
+                                <thead><tr><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Fecha Registro</th><th>Fecha Eliminación</th></tr></thead>
+                                <tbody id="mon-eliminados-list"></tbody>
+                            </table>
+                        </div>
+                        <div class="empty-state" id="mon-eliminados-empty" style="display: none;">
+                            <i data-lucide="trash"></i><p>No hay gastos eliminados para este usuario.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Tab 6: Ayuda Admin -->
+            <section id="tab-ayuda" class="tab-content">
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="help-circle"></i> Guía del Panel de Administración</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Dashboard</div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Vista general del sistema con estadísticas de usuarios y gastos totales.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="users" style="width:16px;height:16px;"></i> Usuarios</div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Gestiona las cuentas de usuarios casuales del sistema.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="receipt" style="width:16px;height:16px;"></i> Gastos por Usuario</div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Visualiza y elimina gastos de cualquier usuario registrado en el sistema.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="monitor" style="width:16px;height:16px;"></i> Monitoreo de Usuario</div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Vista completa del perfil financiero de cada usuario: gastos, categorías, presupuesto e historial.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="history" style="width:16px;height:16px;"></i> Papelera Usuarios</div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Revisa el historial de gastos eliminados por cualquier usuario.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="shield"></i> Responsabilidades del Administrador</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--danger); font-size: 1.2rem; line-height: 1;">●</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Gestiona los usuarios con responsabilidad y criterio profesional.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--danger); font-size: 1.2rem; line-height: 1;">●</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">No elimines gastos o usuarios sin una razón válida y documentada.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--danger); font-size: 1.2rem; line-height: 1;">●</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Usa el monitoreo para ayudar a los usuarios, no para invadir su privacidad.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--danger); font-size: 1.2rem; line-height: 1;">●</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Mantén la confidencialidad de la información personal y financiera de los usuarios.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const API_BASE = '';
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        const catMap = {
+            'alimentacion': 'Alimentación',
+            'transporte': 'Transporte',
+            'salud': 'Salud',
+            'entretenimiento': 'Entretenimiento',
+            'educacion': 'Educación',
+            'otro': 'Otro'
+        };
+
+        const toastContainer = document.getElementById('toast-container');
+        let allUsers = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAdminMe();
+            fetchDashboardStats();
+            lucide.createIcons();
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const iconName = type === 'error' ? 'alert-triangle' : 'check-circle';
+            toast.innerHTML = `<i data-lucide="${iconName}"></i><span>${message}</span>`;
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        async function fetchAdminMe() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+                const user = await res.json();
+                
+                if (user.rol !== 'admin') {
+                    window.location.href = '/dashboard';
+                    return;
+                }
+                document.getElementById('admin-name').textContent = user.nombre;
+            } catch {
+                logout();
+            }
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            el.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            if (tabId === 'dashboard') fetchDashboardStats();
+            else if (tabId === 'usuarios') fetchUsuarios();
+            else if (tabId === 'gastos') loadUsersDropdowns();
+            else if (tabId === 'historial') loadUsersDropdowns();
+            else if (tabId === 'monitoreo') cargarUsuariosMonitoreo();
+        }
+
+        // Tab 1 logic
+        async function fetchDashboardStats() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/usuarios`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await res.json();
+                allUsers = users;
+                
+                document.getElementById('stats-usuarios').textContent = users.length;
+                
+                const statsList = document.getElementById('stats-users-list');
+                statsList.innerHTML = '';
+                
+                let totalSystemGastos = 0;
+
+                // Load each user's expense counts and build summary
+                for (const u of users) {
+                    const resGastos = await fetch(`${API_BASE}/admin/usuarios/${u.id}/gastos`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const gastos = await resGastos.json();
+                    totalSystemGastos += gastos.length;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${escapeHTML(u.nombre)}</td>
+                        <td>${escapeHTML(u.correo)}</td>
+                        <td><span class="badge badge-${u.rol}">${u.rol}</span></td>
+                        <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                    `;
+                    statsList.appendChild(tr);
+                }
+                
+                document.getElementById('stats-gastos').textContent = totalSystemGastos;
+
+            } catch {
+                showToast('Error al cargar estadísticas.', 'error');
+            }
+        }
+
+        // Tab 2 logic
+        async function fetchUsuarios() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/usuarios`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await res.json();
+                allUsers = users;
+                
+                const tbody = document.getElementById('admin-users-list');
+                tbody.innerHTML = '';
+
+                users.forEach(u => {
+                    const isSelfAdmin = u.correo === 'biryu@admin.com';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${escapeHTML(u.nombre)}</td>
+                        <td>${escapeHTML(u.correo)}</td>
+                        <td><span class="badge badge-${u.rol}">${u.rol}</span></td>
+                        <td style="font-family: monospace; font-size: 0.8rem;">${u.password}</td>
+                        <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                        <td style="text-align: center;">
+                            <button class="btn btn-primary btn-action" onclick="viewUserGastosTab('${u.id}')">Ver Gastos</button>
+                            ${!isSelfAdmin ? `<button class="btn btn-danger btn-action" onclick="deleteUser('${u.id}')">Eliminar</button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch {
+                showToast('Error al listar usuarios.', 'error');
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este usuario casual y todos sus registros?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/usuarios/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+                
+                showToast('Usuario eliminado con éxito.');
+                fetchUsuarios();
+            } catch {
+                showToast('No se pudo eliminar al usuario.', 'error');
+            }
+        }
+
+        function viewUserGastosTab(userId) {
+            // Switch to expenses tab
+            const tabItem = document.querySelector('.nav-item[onclick="switchTab(\'gastos\', this)"]');
+            switchTab('gastos', tabItem);
+            
+            // Set selection after dropdown loads
+            setTimeout(() => {
+                const select = document.getElementById('select-usuario-gastos');
+                select.value = userId;
+                onUserGastosSelected();
+            }, 100);
+        }
+
+        // Dropdown dynamic load
+        async function loadUsersDropdowns() {
+            try {
+                if (allUsers.length === 0) {
+                    const res = await fetch(`${API_BASE}/admin/usuarios`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    allUsers = await res.json();
+                }
+                
+                const selectGastos = document.getElementById('select-usuario-gastos');
+                const selectEliminados = document.getElementById('select-usuario-eliminados');
+                
+                // Keep selected values if any
+                const prevGVal = selectGastos.value;
+                const prevEVal = selectEliminados.value;
+
+                let options = '<option value="" disabled selected>Selecciona un usuario</option>';
+                allUsers.forEach(u => {
+                    options += `<option value="${u.id}">${escapeHTML(u.nombre)} (${escapeHTML(u.correo)})</option>`;
+                });
+                
+                selectGastos.innerHTML = options;
+                selectEliminados.innerHTML = options;
+
+                if (prevGVal) selectGastos.value = prevGVal;
+                if (prevEVal) selectEliminados.value = prevEVal;
+
+            } catch {
+                showToast('Error al cargar listado de usuarios.', 'error');
+            }
+        }
+
+        // Tab 3 logic: Gastos por Usuario
+        async function onUserGastosSelected() {
+            const userId = document.getElementById('select-usuario-gastos').value;
+            if (!userId) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/admin/usuarios/${userId}/gastos`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const gastos = await res.json();
+                
+                // Calculate total
+                let total = gastos.reduce((sum, g) => sum + g.monto, 0);
+                document.getElementById('user-gastos-total').textContent = `$${total.toFixed(2)}`;
+                document.getElementById('user-gastos-info-block').style.display = 'block';
+
+                const tbody = document.getElementById('user-gastos-list');
+                tbody.innerHTML = '';
+
+                if (gastos.length === 0) {
+                    document.getElementById('user-gastos-empty').style.display = 'flex';
+                    document.querySelector('#tab-gastos .table-container').style.display = 'none';
+                } else {
+                    document.getElementById('user-gastos-empty').style.display = 'none';
+                    document.querySelector('#tab-gastos .table-container').style.display = 'block';
+
+                    gastos.forEach(g => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(g.descripcion)}</td>
+                            <td><span class="badge badge-${g.categoria}">${catMap[g.categoria]}</span></td>
+                            <td style="font-weight: 600;">$${g.monto.toFixed(2)}</td>
+                            <td>${new Date(g.created_at).toLocaleDateString()}</td>
+                            <td style="text-align: center;">
+                                <button class="btn-delete" onclick="deleteUserGasto('${g.id}')">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    lucide.createIcons();
+                }
+            } catch {
+                showToast('Error al cargar gastos del usuario.', 'error');
+            }
+        }
+
+        async function deleteUserGasto(id) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este gasto como administrador?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/gastos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+                
+                showToast('Gasto eliminado.');
+                onUserGastosSelected();
+            } catch {
+                showToast('No se pudo eliminar el gasto.', 'error');
+            }
+        }
+
+        // Tab 4 logic: Historial de Eliminados
+        async function onUserEliminadosSelected() {
+            const userId = document.getElementById('select-usuario-eliminados').value;
+            if (!userId) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/admin/usuarios/${userId}/eliminados`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const list = await res.json();
+                
+                const tbody = document.getElementById('user-eliminados-list');
+                tbody.innerHTML = '';
+
+                if (list.length === 0) {
+                    document.getElementById('user-eliminados-empty').style.display = 'flex';
+                    document.querySelector('#tab-historial .table-container').style.display = 'none';
+                } else {
+                    document.getElementById('user-eliminados-empty').style.display = 'none';
+                    document.querySelector('#tab-historial .table-container').style.display = 'block';
+
+                    list.forEach(g => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(g.descripcion)}</td>
+                            <td><span class="badge badge-${g.categoria}">${catMap[g.categoria]}</span></td>
+                            <td style="font-weight: 600; color: var(--text-muted); text-decoration: line-through;">$${g.monto.toFixed(2)}</td>
+                            <td>${new Date(g.created_at).toLocaleDateString()}</td>
+                            <td style="color: var(--danger);">${g.deleted_at ? new Date(g.deleted_at).toLocaleString() : 'N/A'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch {
+                showToast('Error al cargar historial de eliminados del usuario.', 'error');
+            }
+        }
+
+        // ─── Monitoreo de Usuario ───────────────────────────────────────
+
+        async function cargarUsuariosMonitoreo() {
+            try {
+                if (allUsers.length === 0) {
+                    const res = await fetch(`${API_BASE}/admin/usuarios`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    allUsers = await res.json();
+                }
+                const casuales = allUsers.filter(u => u.rol === 'casual');
+                const sel = document.getElementById('select-monitoreo-usuario');
+                sel.innerHTML = '<option value="" disabled selected>Selecciona un usuario...</option>';
+                casuales.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.id;
+                    opt.textContent = `${u.nombre} (${u.correo})`;
+                    sel.appendChild(opt);
+                });
+                document.getElementById('monitoreo-content').style.display = 'none';
+            } catch {
+                showToast('Error al cargar usuarios para monitoreo.', 'error');
+            }
+        }
+
+        async function cargarMonitoreoUsuario() {
+            const userId = document.getElementById('select-monitoreo-usuario').value;
+            if (!userId) return;
+            document.getElementById('monitoreo-content').style.display = 'flex';
+
+            // Parallel fetch of all 4 data sources
+            try {
+                const headers = { 'Authorization': `Bearer ${token}` };
+                const [resGastos, resCats, resPres, resElim] = await Promise.all([
+                    fetch(`${API_BASE}/admin/usuarios/${userId}/gastos`, { headers }),
+                    fetch(`${API_BASE}/admin/usuarios/${userId}/categorias`, { headers }),
+                    fetch(`${API_BASE}/admin/usuarios/${userId}/presupuesto`, { headers }),
+                    fetch(`${API_BASE}/admin/usuarios/${userId}/eliminados`, { headers })
+                ]);
+
+                const gastos  = await resGastos.json();
+                const cats    = await resCats.json();
+                const pres    = await resPres.json();
+                const elim    = await resElim.json();
+
+                // --- Gastos Activos ---
+                const gastosBody = document.getElementById('mon-gastos-list');
+                gastosBody.innerHTML = '';
+                if (gastos.length === 0) {
+                    document.getElementById('mon-gastos-empty').style.display = 'flex';
+                    document.getElementById('mon-gastos-table-wrapper').style.display = 'none';
+                } else {
+                    document.getElementById('mon-gastos-empty').style.display = 'none';
+                    document.getElementById('mon-gastos-table-wrapper').style.display = 'block';
+                    gastos.forEach(g => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(g.descripcion)}</td>
+                            <td><span class="badge badge-${g.categoria}">${catMap[g.categoria] || g.categoria}</span></td>
+                            <td style="font-weight:600;">$${g.monto.toFixed(2)}</td>
+                            <td>${new Date(g.created_at).toLocaleDateString()}</td>`;
+                        gastosBody.appendChild(tr);
+                    });
+                }
+
+                // --- Categor\u00edas ---
+                const catGrid = document.getElementById('mon-categorias-grid');
+                catGrid.innerHTML = '';
+                if (cats.length === 0) {
+                    document.getElementById('mon-categorias-empty').style.display = 'flex';
+                    catGrid.style.display = 'none';
+                } else {
+                    document.getElementById('mon-categorias-empty').style.display = 'none';
+                    catGrid.style.display = 'grid';
+                    const catColors = {
+                        alimentacion:'#f59e0b', transporte:'#3b82f6', salud:'#10b981',
+                        entretenimiento:'#ec4899', educacion:'#8b5cf6', otro:'#6b7280'
+                    };
+                    cats.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'category-card';
+                        card.style.cssText = 'background:rgba(22,31,48,0.5);border:1px solid var(--card-border);border-radius:20px;padding:1.5rem;display:flex;flex-direction:column;gap:1rem;';
+                        const color = catColors[item.categoria] || '#6b7280';
+                        card.innerHTML = `
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="font-size:1.1rem;font-weight:600;text-transform:capitalize;">${catMap[item.categoria] || item.categoria}</span>
+                                <span class="badge badge-${item.categoria}">${item.porcentaje.toFixed(1)}%</span>
+                            </div>
+                            <div style="font-size:1.5rem;font-weight:700;">$${item.total.toFixed(2)}</div>
+                            <div style="background:rgba(255,255,255,0.05);border-radius:99px;height:6px;">
+                                <div style="width:${item.porcentaje}%;background:${color};height:100%;border-radius:99px;"></div>
+                            </div>`;
+                        catGrid.appendChild(card);
+                    });
+                }
+
+                // --- Presupuesto ---
+                const presInfo = document.getElementById('mon-presupuesto-info');
+                if (!pres.presupuesto) {
+                    presInfo.innerHTML = `<div style="display:flex;align-items:center;gap:0.75rem;padding:1rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:14px;color:#f59e0b;font-weight:600;">
+                        <i data-lucide="alert-triangle"></i> Este usuario no tiene presupuesto configurado
+                    </div>`;
+                } else {
+                    const percent = pres.presupuesto > 0 ? (pres.total_gastado / pres.presupuesto * 100) : 0;
+                    const barColor = pres.superado ? 'var(--danger)' : 'var(--primary)';
+                    presInfo.innerHTML = `
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+                            <div style="background:rgba(22,31,48,0.5);border:1px solid var(--card-border);border-radius:14px;padding:1rem;">
+                                <div style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.3rem;">Presupuesto m\u00e1x.</div>
+                                <div style="font-size:1.4rem;font-weight:700;">$${pres.presupuesto.toFixed(2)}</div>
+                            </div>
+                            <div style="background:rgba(22,31,48,0.5);border:1px solid var(--card-border);border-radius:14px;padding:1rem;">
+                                <div style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.3rem;">Total gastado</div>
+                                <div style="font-size:1.4rem;font-weight:700;">$${pres.total_gastado.toFixed(2)}</div>
+                            </div>
+                            <div style="background:rgba(22,31,48,0.5);border:1px solid var(--card-border);border-radius:14px;padding:1rem;">
+                                <div style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.3rem;">Saldo restante</div>
+                                <div style="font-size:1.4rem;font-weight:700;color:${pres.superado ? 'var(--danger)' : 'var(--success)'};">$${pres.saldo_restante.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="background:rgba(255,255,255,0.05);border-radius:99px;height:10px;overflow:hidden;">
+                                <div style="width:${Math.min(percent,100)}%;background:${barColor};height:100%;border-radius:99px;transition:width 0.6s;"></div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">
+                                <span>$${pres.total_gastado.toFixed(2)} de $${pres.presupuesto.toFixed(2)}</span>
+                                <span style="color:${pres.superado ? 'var(--danger)' : 'var(--text-muted)'}">${percent.toFixed(1)}%${pres.superado ? ' \u26a0 Superado' : ''}</span>
+                            </div>
+                        </div>`;
+                }
+
+                // --- Historial Eliminados ---
+                const elimBody = document.getElementById('mon-eliminados-list');
+                elimBody.innerHTML = '';
+                if (elim.length === 0) {
+                    document.getElementById('mon-eliminados-empty').style.display = 'flex';
+                    document.getElementById('mon-eliminados-table-wrapper').style.display = 'none';
+                } else {
+                    document.getElementById('mon-eliminados-empty').style.display = 'none';
+                    document.getElementById('mon-eliminados-table-wrapper').style.display = 'block';
+                    elim.forEach(g => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(g.descripcion)}</td>
+                            <td><span class="badge badge-${g.categoria}">${catMap[g.categoria] || g.categoria}</span></td>
+                            <td style="font-weight:600;color:var(--text-muted);text-decoration:line-through;">$${g.monto.toFixed(2)}</td>
+                            <td>${new Date(g.created_at).toLocaleDateString()}</td>
+                            <td style="color:var(--danger);">${g.deleted_at ? new Date(g.deleted_at).toLocaleString() : 'N/A'}</td>`;
+                        elimBody.appendChild(tr);
+                    });
+                }
+
+                lucide.createIcons();
+            } catch {
+                showToast('Error al cargar datos de monitoreo.', 'error');
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+    </script>
+</body>
+</html>

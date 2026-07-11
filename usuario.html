@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastosYa — Panel de Control</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 31, 48, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+
+            /* Category Colors */
+            --cat-alimentacion: #f59e0b;
+            --cat-transporte: #3b82f6;
+            --cat-salud: #10b981;
+            --cat-entretenimiento: #ec4899;
+            --cat-educacion: #8b5cf6;
+            --cat-otro: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Layout Structure */
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 900px) {
+            .wrapper {
+                flex-direction: row;
+            }
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 100%;
+            background: rgba(17, 24, 39, 0.9);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 900px) {
+            .sidebar {
+                width: 280px;
+                border-bottom: none;
+                border-right: 1px solid var(--card-border);
+                position: sticky;
+                top: 0;
+                height: 100vh;
+            }
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-info-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .user-info-card .name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-info-card .email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        @media (min-width: 900px) {
+            .nav-menu {
+                flex-direction: column;
+                flex-grow: 1;
+            }
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            width: 100%;
+            text-decoration: none;
+        }
+
+        @media (max-width: 899px) {
+            .nav-item {
+                width: auto;
+                flex-grow: 1;
+                justify-content: center;
+                font-size: 0.9rem;
+                padding: 0.6rem 0.8rem;
+            }
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-main);
+            background: rgba(99, 102, 241, 0.15);
+            border-left: 3px solid var(--primary);
+        }
+
+        .btn-logout {
+            margin-top: auto;
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: white;
+        }
+
+        /* Main Content Workspace */
+        .content-area {
+            flex-grow: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Cards/Widgets layout */
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .panel-title i {
+            color: var(--primary);
+        }
+
+        /* Widgets Grid */
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .widget-card {
+            background: rgba(22, 31, 48, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .widget-card.danger::before { background: var(--danger); }
+        .widget-card.success::before { background: var(--success); }
+        .widget-card.info::before { background: var(--info); }
+
+        .widget-info h4 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .widget-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .widget-icon {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        /* Progress Bar Widget */
+        .progress-wrapper {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            height: 8px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(95deg, var(--primary), #ec4899);
+            height: 100%;
+            border-radius: 99px;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-bar-fill.danger {
+            background: var(--danger);
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Budget Alert Banner */
+        .alert-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 500;
+        }
+
+        .alert-banner i {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(11, 15, 25, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        /* Modal Container */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-card {
+            background: #111827;
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+        }
+
+        /* Tables & Lists */
+        .table-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            background: rgba(11, 15, 25, 0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(22, 31, 48, 0.9);
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+        }
+
+        .btn-delete:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            border: 1px solid transparent;
+        }
+
+        .badge-alimentacion { background: rgba(245, 158, 11, 0.1); color: var(--cat-alimentacion); border-color: rgba(245, 158, 11, 0.2); }
+        .badge-transporte { background: rgba(59, 130, 246, 0.1); color: var(--cat-transporte); border-color: rgba(59, 130, 246, 0.2); }
+        .badge-salud { background: rgba(16, 185, 129, 0.1); color: var(--cat-salud); border-color: rgba(16, 185, 129, 0.2); }
+        .badge-entretenimiento { background: rgba(236, 72, 153, 0.1); color: var(--cat-entretenimiento); border-color: rgba(236, 72, 153, 0.2); }
+        .badge-educacion { background: rgba(139, 92, 246, 0.1); color: var(--cat-educacion); border-color: rgba(139, 92, 246, 0.2); }
+        .badge-otro { background: rgba(107, 114, 128, 0.1); color: var(--cat-otro); border-color: rgba(107, 114, 128, 0.2); }
+
+        /* Categories Section styling */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .category-card {
+            background: rgba(22, 31, 48, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1100;
+        }
+
+        .toast {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--primary);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 280px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success { border-left-color: var(--success); }
+        .toast-error { border-left-color: var(--danger); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-brand">
+                <i data-lucide="wallet"></i> GastosYa
+            </div>
+
+            <div class="user-info-card">
+                <div class="name" id="user-name">Cargando...</div>
+                <div class="email" id="user-email">...</div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="switchTab('resumen', this)">
+                    <i data-lucide="layout-dashboard"></i> Resumen
+                </li>
+                <li class="nav-item" onclick="switchTab('gastos', this)">
+                    <i data-lucide="receipt"></i> Mis Gastos
+                </li>
+                <li class="nav-item" onclick="switchTab('categorias', this)">
+                    <i data-lucide="pie-chart"></i> Categorías
+                </li>
+                <li class="nav-item" onclick="switchTab('presupuesto', this)">
+                    <i data-lucide="target"></i> Presupuesto
+                </li>
+                <li class="nav-item" onclick="switchTab('historial', this)">
+                    <i data-lucide="history"></i> Historial Eliminados
+                </li>
+                <li class="nav-item" onclick="switchTab('ayuda', this)">
+                    <i data-lucide="help-circle"></i> Ayuda
+                </li>
+            </ul>
+
+            <button class="btn btn-logout" onclick="logout()">
+                <i data-lucide="log-out"></i> Cerrar Sesión
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            
+            <!-- Alert Banner -->
+            <div class="alert-banner" id="budget-alert-banner">
+                <i data-lucide="alert-triangle"></i>
+                <span>¡Atención! Has superado tu presupuesto mensual máximo configurado.</span>
+            </div>
+
+            <!-- Tab 1: Resumen -->
+            <section id="tab-resumen" class="tab-content active">
+                <div class="widgets-grid">
+                    <div class="widget-card info">
+                        <div class="widget-info">
+                            <h4>Total Gastado</h4>
+                            <div class="widget-value" id="resumen-total">$0.00</div>
+                        </div>
+                        <div class="widget-icon"><i data-lucide="trending-up"></i></div>
+                    </div>
+                    <div class="widget-card success" id="pres-widget">
+                        <div class="widget-info">
+                            <h4>Presupuesto</h4>
+                            <div class="widget-value" id="resumen-presupuesto">No asignado</div>
+                        </div>
+                        <div class="widget-icon"><i data-lucide="target"></i></div>
+                    </div>
+                    <div class="widget-card" id="saldo-widget">
+                        <div class="widget-info">
+                            <h4>Saldo Restante</h4>
+                            <div class="widget-value" id="resumen-saldo">$0.00</div>
+                        </div>
+                        <div class="widget-icon"><i data-lucide="wallet"></i></div>
+                    </div>
+                </div>
+
+                <!-- Progress Widget -->
+                <div class="panel" id="progress-panel" style="display: none;">
+                    <h3 class="panel-title"><i data-lucide="activity"></i> Consumo de Presupuesto</h3>
+                    <div class="progress-wrapper">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="resumen-progress-fill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progress-monto-consumo">$0.00 gastados</span>
+                            <span id="progress-porcentaje-consumo">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Latest 5 expenses -->
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="clock"></i> Últimos 5 Gastos</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="latest-gastos-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 2: Mis Gastos -->
+            <section id="tab-gastos" class="tab-content">
+                <div class="panel">
+                    <div class="table-header-row">
+                        <h3 class="panel-title" style="border: none; margin: 0; padding: 0;">
+                            <i data-lucide="receipt"></i> Registro de Gastos
+                        </h3>
+                        
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="filter-group">
+                                <label for="filter-categoria" style="font-size: 0.85rem; color: var(--text-muted);">Filtrar:</label>
+                                <select id="filter-categoria" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onchange="fetchGastos()">
+                                    <option value="">Todas las categorías</option>
+                                    <option value="alimentacion">Alimentación</option>
+                                    <option value="transporte">Transporte</option>
+                                    <option value="salud">Salud</option>
+                                    <option value="entretenimiento">Entretenimiento</option>
+                                    <option value="educacion">Educación</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="openModal()">
+                                <i data-lucide="plus-circle"></i> Nuevo Gasto
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Fecha</th>
+                                    <th style="width: 60px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gastos-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="gastos-empty" style="display: none;">
+                        <i data-lucide="piggy-bank"></i>
+                        <p>No hay gastos registrados en esta categoría.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 3: Categorías -->
+            <section id="tab-categorias" class="tab-content">
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="pie-chart"></i> Distribución de Gastos por Categoría</h3>
+                    <div class="category-grid" id="category-grid">
+                        <!-- JS Cards -->
+                    </div>
+                    <div class="empty-state" id="categorias-empty" style="display: none;">
+                        <i data-lucide="bar-chart-2"></i>
+                        <p>Registra gastos para poder ver la distribución por categorías.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 4: Presupuesto -->
+            <section id="tab-presupuesto" class="tab-content">
+                <div class="panel" style="max-width: 500px;">
+                    <h3 class="panel-title"><i data-lucide="target"></i> Configurar Presupuesto Mensual</h3>
+                    <form id="presupuesto-form">
+                        <div class="form-group">
+                            <label for="pres-monto">Monto Máximo del Presupuesto ($)</label>
+                            <input type="number" id="pres-monto" class="form-control" placeholder="Ej. 1000.00" min="0.01" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="save"></i> Guardar Presupuesto
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Tab 5: Historial Eliminados -->
+            <section id="tab-historial" class="tab-content">
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="history"></i> Papelera de Gastos (Solo Lectura)</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Fecha Eliminación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eliminados-list">
+                                <!-- JS items -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="eliminados-empty" style="display: none;">
+                        <i data-lucide="trash"></i>
+                        <p>No tienes gastos eliminados en tu historial.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 6: Ayuda -->
+            <section id="tab-ayuda" class="tab-content">
+
+                <!-- Sección: Guía de uso -->
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="book-open"></i> Guía de Uso</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Resumen
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Aquí puedes ver un resumen de tus gastos y presupuesto mensual.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-lucide="receipt" style="width:16px;height:16px;"></i> Mis Gastos
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Registra, visualiza y elimina tus gastos personales con filtro por categoría.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-lucide="pie-chart" style="width:16px;height:16px;"></i> Categorías
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Visualiza en qué categorías gastas más tu dinero y el porcentaje de cada una.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-lucide="target" style="width:16px;height:16px;"></i> Presupuesto
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Define tu límite de gasto mensual y controla cuánto te queda disponible.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-lucide="history" style="width:16px;height:16px;"></i> Historial
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Revisa los gastos que eliminaste anteriormente como registro de referencia.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Consejos -->
+                <div class="panel">
+                    <h3 class="panel-title"><i data-lucide="lightbulb"></i> Consejos para Cuidar tu Economía</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--primary); font-size: 1.2rem; line-height: 1;">✦</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">No gastes más del 50% de tu presupuesto en entretenimiento.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--primary); font-size: 1.2rem; line-height: 1;">✦</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Registra todos tus gastos, incluso los pequeños; suman más de lo que crees.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--primary); font-size: 1.2rem; line-height: 1;">✦</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Revisa tus categorías semanalmente para identificar gastos innecesarios.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--primary); font-size: 1.2rem; line-height: 1;">✦</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Si superas tu presupuesto, ajústalo o reduce gastos el siguiente mes.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                            <span style="color: var(--primary); font-size: 1.2rem; line-height: 1;">✦</span>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Ahorra al menos el 20% de tus ingresos antes de gastar en otras cosas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Recordatorio -->
+                <div class="panel" style="border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05);">
+                    <h3 class="panel-title" style="color: #f59e0b;">
+                        <i data-lucide="bell" style="color: #f59e0b;"></i> Recordatorio Importante
+                    </h3>
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <i data-lucide="alert-circle" style="color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i>
+                        <p style="color: #fcd34d; font-size: 1rem; line-height: 1.7; font-weight: 500;">
+                            Recuerda: superar tu presupuesto mensual afecta tu estabilidad económica.
+                            Lleva un control constante de tus gastos para mantener unas finanzas
+                            saludables y alcanzar tus metas financieras a largo plazo.
+                        </p>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal" id="gasto-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h3 class="panel-title" style="border: none; margin-bottom: 1.5rem;"><i data-lucide="plus-circle"></i> Nuevo Gasto</h3>
+            
+            <form id="gasto-form">
+                <div class="form-group">
+                    <label for="gasto-descripcion">Descripción</label>
+                    <input type="text" id="gasto-descripcion" class="form-control" placeholder="Ej. Compra de supermercado" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gasto-monto">Monto ($)</label>
+                    <input type="number" id="gasto-monto" class="form-control" placeholder="Ej. 45.90" min="0.01" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gasto-categoria">Categoría</label>
+                    <select id="gasto-categoria" class="form-control" required>
+                        <option value="" disabled selected>Selecciona categoría</option>
+                        <option value="alimentacion">Alimentación</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="salud">Salud</option>
+                        <option value="entretenimiento">Entretenimiento</option>
+                        <option value="educacion">Educación</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i data-lucide="plus"></i> Registrar Gasto
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const API_BASE = '';
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        const catMap = {
+            'alimentacion': 'Alimentación',
+            'transporte': 'Transporte',
+            'salud': 'Salud',
+            'entretenimiento': 'Entretenimiento',
+            'educacion': 'Educación',
+            'otro': 'Otro'
+        };
+
+        // Cache elements
+        const toastContainer = document.getElementById('toast-container');
+        const budgetAlert = document.getElementById('budget-alert-banner');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUser();
+            fetchDashboardData();
+            lucide.createIcons();
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const iconName = type === 'error' ? 'alert-triangle' : 'check-circle';
+            toast.innerHTML = `<i data-lucide="${iconName}"></i><span>${message}</span>`;
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            el.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            if (tabId === 'resumen') fetchDashboardData();
+            else if (tabId === 'gastos') fetchGastos();
+            else if (tabId === 'categorias') fetchCategorias();
+            else if (tabId === 'historial') fetchEliminados();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        async function fetchUser() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+                const user = await res.json();
+                
+                document.getElementById('user-name').textContent = user.nombre;
+                document.getElementById('user-email').textContent = user.correo;
+            } catch {
+                logout();
+            }
+        }
+
+        // Tab 1 logic
+        async function fetchDashboardData() {
+            try {
+                // Get budget status
+                const resStatus = await fetch(`${API_BASE}/presupuesto/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const status = await resStatus.json();
+                
+                document.getElementById('resumen-total').textContent = `$${status.total_gastado.toFixed(2)}`;
+                
+                const resumenPres = document.getElementById('resumen-presupuesto');
+                const resumenSaldo = document.getElementById('resumen-saldo');
+                const progressPanel = document.getElementById('progress-panel');
+                
+                if (status.presupuesto !== null) {
+                    resumenPres.textContent = `$${status.presupuesto.toFixed(2)}`;
+                    resumenSaldo.textContent = `$${status.saldo_restante.toFixed(2)}`;
+                    progressPanel.style.display = 'block';
+                    
+                    const percent = status.presupuesto > 0 ? (status.total_gastado / status.presupuesto * 100) : 0;
+                    const fill = document.getElementById('resumen-progress-fill');
+                    
+                    fill.style.width = `${Math.min(percent, 100)}%`;
+                    document.getElementById('progress-monto-consumo').textContent = `$${status.total_gastado.toFixed(2)} gastados de $${status.presupuesto.toFixed(2)}`;
+                    document.getElementById('progress-porcentaje-consumo').textContent = `${percent.toFixed(1)}%`;
+                    
+                    if (status.superado) {
+                        fill.className = 'progress-bar-fill danger';
+                        budgetAlert.style.display = 'flex';
+                        document.getElementById('saldo-widget').className = 'widget-card danger';
+                    } else {
+                        fill.className = 'progress-bar-fill';
+                        budgetAlert.style.display = 'none';
+                        document.getElementById('saldo-widget').className = 'widget-card success';
+                    }
+                    
+                    // Pre-populate budget form fields
+                    document.getElementById('pres-monto').value = status.presupuesto;
+                } else {
+                    resumenPres.textContent = 'No asignado';
+                    resumenSaldo.textContent = '$0.00';
+                    progressPanel.style.display = 'none';
+                    budgetAlert.style.display = 'none';
+                    document.getElementById('saldo-widget').className = 'widget-card';
+                }
+
+                // Fetch latest 5 gastos
+                const resGastos = await fetch(`${API_BASE}/gastos/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const gastos = await resGastos.json();
+                const latestList = document.getElementById('latest-gastos-list');
+                latestList.innerHTML = '';
+                
+                gastos.slice(0, 5).forEach(g => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${escapeHTML(g.descripcion)}</td>
+                        <td><span class="badge badge-${g.categoria}">${catMap[g.categoria]}</span></td>
+                        <td style="font-weight: 600;">$${g.monto.toFixed(2)}</td>
+                        <td>${new Date(g.created_at).toLocaleDateString()}</td>
+                    `;
+                    latestList.appendChild(tr);
+                });
+
+            } catch (err) {
+                showToast('Error al cargar datos del panel.', 'error');
+            }
+        }
+
+        // Tab 2: Mis Gastos logic
+        async function fetchGastos() {
+            try {
+                const categoryFilter = document.getElementById('filter-categoria').value;
+                let url = `${API_BASE}/gastos/`;
+                if (categoryFilter) {
+                    url += `?categoria=${categoryFilter}`;
+                }
+
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const gastos = await res.json();
+                const tbody = document.getElementById('gastos-list');
+                tbody.innerHTML = '';
+
+                if (gastos.length === 0) {
+                    document.getElementById('gastos-empty').style.display = 'flex';
+                    document.querySelector('#tab-gastos .table-container').style.display = 'none';
+                } else {
+                    document.getElementById('gastos-empty').style.display = 'none';
+                    document.querySelector('#tab-gastos .table-container').style.display = 'block';
+
+                    gastos.forEach(g => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(g.descripcion)}</td>
+                            <td><span class="badge badge-${g.categoria}">${catMap[g.categoria]}</span></td>
+                            <td style="font-weight: 600;">$${g.monto.toFixed(2)}</td>
+                            <td>${new Date(g.created_at).toLocaleDateString()}</td>
+                            <td style="text-align: center;">
+                                <button class="btn-delete" onclick="deleteGasto('${g.id}')">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    lucide.createIcons();
+                }
+            } catch {
+                showToast('Error al cargar gastos.', 'error');
+            }
+        }
+
+        function openModal() {
+            document.getElementById('gasto-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('gasto-modal').style.display = 'none';
+            document.getElementById('gasto-form').reset();
+        }
+
+        document.getElementById('gasto-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const descripcion = document.getElementById('gasto-descripcion').value.trim();
+            const monto = parseFloat(document.getElementById('gasto-monto').value);
+            const categoria = document.getElementById('gasto-categoria').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/gastos/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ descripcion, monto, categoria })
+                });
+
+                if (!res.ok) throw new Error();
+                
+                showToast('Gasto registrado con éxito.');
+                closeModal();
+                fetchGastos();
+            } catch {
+                showToast('Error al registrar el gasto.', 'error');
+            }
+        });
+
+        async function deleteGasto(id) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este gasto?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/gastos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+                
+                showToast('Gasto enviado a la papelera.');
+                fetchGastos();
+            } catch {
+                showToast('Error al eliminar el gasto.', 'error');
+            }
+        }
+
+        // Tab 3: Categorías
+        async function fetchCategorias() {
+            try {
+                const res = await fetch(`${API_BASE}/gastos/categorias`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const summary = await res.json();
+                
+                const grid = document.getElementById('category-grid');
+                grid.innerHTML = '';
+
+                if (summary.length === 0) {
+                    document.getElementById('categorias-empty').style.display = 'flex';
+                    grid.style.display = 'none';
+                } else {
+                    document.getElementById('categorias-empty').style.display = 'none';
+                    grid.style.display = 'grid';
+
+                    summary.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'category-card';
+                        card.innerHTML = `
+                            <div class="category-header">
+                                <span class="category-name">${catMap[item.categoria]}</span>
+                                <span class="badge badge-${item.categoria}">${item.porcentaje.toFixed(1)}%</span>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 700;">$${item.total.toFixed(2)}</div>
+                            <div class="progress-bar-bg" style="height: 6px;">
+                                <div class="progress-bar-fill" style="width: ${item.porcentaje}%; background: var(--cat-${item.categoria});"></div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            } catch {
+                showToast('Error al cargar categorías.', 'error');
+            }
+        }
+
+        // Tab 4: Presupuesto Form Submit
+        document.getElementById('presupuesto-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const monto = parseFloat(document.getElementById('pres-monto').value);
+            const now = new Date();
+            const mes = now.getMonth() + 1;
+            const anio = now.getFullYear();
+
+            try {
+                const res = await fetch(`${API_BASE}/presupuesto/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ monto, mes, anio })
+                });
+
+                if (!res.ok) throw new Error();
+                showToast('Presupuesto mensual guardado.');
+                fetchDashboardData();
+            } catch {
+                showToast('Error al configurar el presupuesto.', 'error');
+            }
+        });
+
+        // Tab 5: Historial Eliminados
+        async function fetchEliminados() {
+            try {
+                const res = await fetch(`${API_BASE}/gastos/eliminados`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const list = await res.json();
+                const tbody = document.getElementById('eliminados-list');
+                tbody.innerHTML = '';
+
+                if (list.length === 0) {
+                    document.getElementById('eliminados-empty').style.display = 'flex';
+                    document.querySelector('#tab-historial .table-container').style.display = 'none';
+                } else {
+                    document.getElementById('eliminados-empty').style.display = 'none';
+                    document.querySelector('#tab-historial .table-container').style.display = 'block';
+
+                    list.forEach(g => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(g.descripcion)}</td>
+                            <td><span class="badge badge-${g.categoria}">${catMap[g.categoria]}</span></td>
+                            <td style="font-weight: 600; color: var(--text-muted); text-decoration: line-through;">$${g.monto.toFixed(2)}</td>
+                            <td>${new Date(g.created_at).toLocaleDateString()}</td>
+                            <td style="color: var(--danger);">${g.deleted_at ? new Date(g.deleted_at).toLocaleString() : 'N/A'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch {
+                showToast('Error al cargar papelera de gastos.', 'error');
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+    </script>
+</body>
+</html>
